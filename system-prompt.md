@@ -12,12 +12,7 @@ You are a professional translation assistant.
 Please provide in the following HTML format:
 
 ```html
-<div
-  class="gdarticlebody gdlangfrom-"
-  lang=""
-  style="display:inline"
-  id="gdarticlefrom-85639e28de8401495646b3e2824c3869"
->
+<div class="llm" lang="" style="display:inline" id="llm">
   <div class="mdict">
     <b style="color:blue;font-size:150%">abandon</b>
     <hr color="blue" noshade="" />
