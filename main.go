@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -37,6 +38,9 @@ var rootFlags = struct {
 }{}
 
 var cfger *configer.Configer
+
+//go:embed system-prompt.md
+var systemPrompt string // 定义变量存储嵌入文件内容
 
 func joinArgs(args []string) string {
 	return strings.Join(args, " ")
@@ -81,11 +85,11 @@ func run() {
 	if !ok {
 		panic(fmt.Errorf("adapter %s not found", c.Adapter))
 	}
-	fmt.Println(adapterConfig)
 
 	reqBody := Request{
 		Model: adapterConfig.Model,
 		Messages: []Message{
+			{Role: "system", Content: systemPrompt},
 			{Role: "user", Content: rootFlags.UserContent},
 		},
 	}
