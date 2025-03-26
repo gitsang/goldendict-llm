@@ -2,6 +2,6 @@ adapter: openai
 
 adapters:
   openai:
-    base_url: "https://api.openai.com/v1/chat/completions"
-    api_key: "your-api-key-here"
+    url: "https://api.openai.com/v1/chat/completions"
+    token: "your-api-key-here"
     model: "gpt-3.5-turbo"

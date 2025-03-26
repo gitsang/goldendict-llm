@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gitsang/configer"
@@ -13,14 +14,14 @@ import (
 )
 
 type Adapter struct {
-	BaseURL string `yaml:"base_url"`
-	APIKey  string `yaml:"api_key"`
-	Model   string `yaml:"model"`
+	URL   string
+	Token string
+	Model string
 }
 
 type Config struct {
-	Adapter  string             `yaml:"adapter"`
-	Adapters map[string]Adapter `yaml:"adapters"`
+	Adapter  string
+	Adapters map[string]Adapter
 }
 
 var rootCmd = &cobra.Command{
@@ -32,12 +33,24 @@ var rootCmd = &cobra.Command{
 
 var rootFlags = struct {
 	ConfigPaths []string
+	UserContent string
 }{}
 
 var cfger *configer.Configer
 
+func joinArgs(args []string) string {
+	return strings.Join(args, " ")
+}
+
 func init() {
 	rootCmd.PersistentFlags().StringSliceVarP(&rootFlags.ConfigPaths, "config", "c", nil, "config file path")
+	rootCmd.PersistentFlags().StringVarP(&rootFlags.UserContent, "content", "m", "", "user input content")
+	rootCmd.Run = func(cmd *cobra.Command, args []string) {
+		if len(args) > 0 {
+			rootFlags.UserContent = joinArgs(args)
+		}
+		run()
+	}
 
 	cfger = configer.New(
 		configer.WithTemplate(new(Config)),
@@ -68,11 +81,12 @@ func run() {
 	if !ok {
 		panic(fmt.Errorf("adapter %s not found", c.Adapter))
 	}
+	fmt.Println(adapterConfig)
 
 	reqBody := Request{
 		Model: adapterConfig.Model,
 		Messages: []Message{
-			{Role: "user", Content: "hi"},
+			{Role: "user", Content: rootFlags.UserContent},
 		},
 	}
 	jsonData, err := json.Marshal(reqBody)
@@ -80,12 +94,12 @@ func run() {
 		panic(fmt.Sprintf("Json marshal failed: %v", err))
 	}
 
-	req, err := http.NewRequest("POST", adapterConfig.BaseURL, bytes.NewBuffer(jsonData))
+	req, err := http.NewRequest("POST", adapterConfig.URL, bytes.NewBuffer(jsonData))
 	if err != nil {
 		panic(fmt.Errorf("NewRequest failed: %v", err))
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+adapterConfig.APIKey)
+	req.Header.Set("Authorization", "Bearer "+adapterConfig.Token)
 
 	resp, err := client.Do(req)
 	if err != nil {
