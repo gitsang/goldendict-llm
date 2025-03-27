@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"io"
 	"path/filepath"
+	"regexp"
 )
 
 type WordEntry struct {
@@ -60,19 +61,23 @@ type AlternativeDefinition struct {
 
 func ParseContentToWordEntry(content string) (*WordEntry, error) {
 	wordEntry := WordEntry{}
-	contentJsonBytes, err := json.Marshal([]byte(content))
-	if err != nil {
-		return nil, err
-	}
-	err = json.Unmarshal(contentJsonBytes, &wordEntry)
+	err := json.Unmarshal([]byte(content), &wordEntry)
 	if err != nil {
 		return nil, err
 	}
 	return &wordEntry, nil
 }
 
+func RemoveMarkdownCodeBlockTags(content string) string {
+	startRegex := regexp.MustCompile("(?m)^```.*\\n")
+	endRegex := regexp.MustCompile("(?m)^```\\s*$")
+	content = endRegex.ReplaceAllString(content, "")
+	content = startRegex.ReplaceAllString(content, "")
+	return content
+}
+
 func ProcessUserContent(content string) (string, error) {
-	entry, err := ParseContentToWordEntry(content)
+	entry, err := ParseContentToWordEntry(RemoveMarkdownCodeBlockTags(content))
 	if err != nil {
 		return "", nil
 	}
