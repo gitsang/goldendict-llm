@@ -23,6 +23,7 @@ type Adapter struct {
 type Config struct {
 	Adapter  string
 	Adapters map[string]Adapter
+	Timeout  string `default:"30s"`
 }
 
 var rootCmd = &cobra.Command{
@@ -77,8 +78,13 @@ func run() {
 		panic(err)
 	}
 
+	timeout, err := time.ParseDuration(c.Timeout)
+	if err != nil {
+		panic(fmt.Sprintf("Invalid timeout: %v", err))
+	}
+
 	client := &http.Client{
-		Timeout: 30 * time.Second,
+		Timeout: timeout,
 	}
 
 	adapterConfig, ok := c.Adapters[c.Adapter]
