@@ -39,8 +39,8 @@ var rootFlags = struct {
 
 var cfger *configer.Configer
 
-//go:embed system-prompt.md
-var systemPrompt string // 定义变量存储嵌入文件内容
+//go:embed static/system-prompt.md
+var systemPrompt string
 
 func joinArgs(args []string) string {
 	return strings.Join(args, " ")
