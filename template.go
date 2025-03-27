@@ -79,7 +79,7 @@ func RemoveMarkdownCodeBlockTags(content string) string {
 	return content
 }
 
-func ProcessUserContent(content string) (string, error) {
+func ProcessWordResponse(content string) (string, error) {
 	entry, err := ParseContentToWordEntry(RemoveMarkdownCodeBlockTags(content))
 	if err != nil {
 		return "", nil

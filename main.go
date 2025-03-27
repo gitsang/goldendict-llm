@@ -35,13 +35,16 @@ var rootCmd = &cobra.Command{
 
 var rootFlags = struct {
 	ConfigPaths []string
-	UserContent string
+	UserInput   string
 }{}
 
 var cfger *configer.Configer
 
-//go:embed static/system-prompt.md
-var systemPrompt string
+//go:embed static/word-prompt.md
+var WordPrompt string
+
+//go:embed static/sentence-prompt.md
+var SentencePrompt string
 
 func joinArgs(args []string) string {
 	return strings.Join(args, " ")
@@ -49,10 +52,10 @@ func joinArgs(args []string) string {
 
 func init() {
 	rootCmd.PersistentFlags().StringSliceVarP(&rootFlags.ConfigPaths, "config", "c", nil, "config file path")
-	rootCmd.PersistentFlags().StringVarP(&rootFlags.UserContent, "content", "m", "", "user input content")
+	rootCmd.PersistentFlags().StringVarP(&rootFlags.UserInput, "content", "m", "", "user input content")
 	rootCmd.Run = func(cmd *cobra.Command, args []string) {
 		if len(args) > 0 {
-			rootFlags.UserContent = joinArgs(args)
+			rootFlags.UserInput = joinArgs(args)
 		}
 		run()
 	}
@@ -69,6 +72,11 @@ func init() {
 			configer.WithFlagDelim("."),
 		),
 	)
+}
+
+func isWord(content string) bool {
+	trimmed := strings.TrimSpace(content)
+	return !strings.Contains(trimmed, " ")
 }
 
 func run() {
@@ -92,11 +100,16 @@ func run() {
 		panic(fmt.Errorf("adapter %s not found", c.Adapter))
 	}
 
+	promptTemplate := WordPrompt
+	if !isWord(rootFlags.UserInput) {
+		promptTemplate = SentencePrompt
+	}
+
 	reqBody := Request{
 		Model: adapterConfig.Model,
 		Messages: []Message{
-			{Role: "system", Content: systemPrompt},
-			{Role: "user", Content: rootFlags.UserContent},
+			{Role: "system", Content: promptTemplate},
+			{Role: "user", Content: rootFlags.UserInput},
 		},
 	}
 	jsonData, err := json.Marshal(reqBody)
@@ -132,13 +145,15 @@ func run() {
 	}
 
 	if len(apiResp.Choices) > 0 {
-		if len(apiResp.Choices) > 0 {
-			content := apiResp.Choices[0].Message.Content
-			renderedContent, err := ProcessUserContent(content)
+		content := apiResp.Choices[0].Message.Content
+		if isWord(rootFlags.UserInput) {
+			renderedContent, err := ProcessWordResponse(content)
 			if err != nil {
 				panic(fmt.Sprintf("Template rendering failed: %v", err))
 			}
 			fmt.Println(renderedContent)
+		} else {
+			fmt.Println(content)
 		}
 	}
 }
