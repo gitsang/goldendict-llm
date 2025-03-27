@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/gitsang/configer"
 	"github.com/spf13/cobra"
@@ -76,7 +77,40 @@ func init() {
 
 func isWord(content string) bool {
 	trimmed := strings.TrimSpace(content)
-	return !strings.Contains(trimmed, " ")
+	if len(trimmed) == 0 {
+		return false
+	}
+	if strings.Contains(trimmed, " ") {
+		return false
+	}
+	for _, sep := range []string{",", ".", ";", ":", "，", "。", "；", "：", "、"} {
+		if strings.Contains(trimmed, sep) {
+			return false
+		}
+	}
+
+	chineseCharCount := 0
+	englishCharCount := 0
+	for _, r := range trimmed {
+		if unicode.Is(unicode.Han, r) {
+			chineseCharCount++
+		} else if unicode.IsLetter(r) {
+			englishCharCount++
+		}
+
+		if chineseCharCount > 4 {
+			return false
+		}
+		if chineseCharCount == 0 && englishCharCount > 32 {
+			return false
+		}
+
+		if chineseCharCount > 0 && (chineseCharCount+englishCharCount) > 16 {
+			return false
+		}
+	}
+
+	return true
 }
 
 func run() {
