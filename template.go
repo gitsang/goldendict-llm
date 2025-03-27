@@ -5,12 +5,41 @@ import (
 	_ "embed"
 	"encoding/json"
 	"html/template"
-	"io"
 	"regexp"
 )
 
+//go:embed static/sentence.html.tmpl
+var sentenceTemplateString string
+
+var sentenceTemplate = template.Must(template.New("sentence.html.tmpl").Parse(sentenceTemplateString))
+
+type SentenceEntry struct {
+	Sentence    string
+	Translation string
+}
+
+func RenderSentenceTemplateToString(sentence, translation string) (string, error) {
+	var buf bytes.Buffer
+	if err := sentenceTemplate.Execute(&buf,
+		SentenceEntry{
+			Sentence:    sentence,
+			Translation: translation,
+		}); err != nil {
+		return "", err
+	}
+	return buf.String(), nil
+}
+
 //go:embed static/word.html.tmpl
 var wordTemplateString string
+
+var funcMap = template.FuncMap{
+	"add": func(a, b int) int {
+		return a + b
+	},
+}
+
+var wordTemplate = template.Must(template.New("word.html.tmpl").Funcs(funcMap).Parse(wordTemplateString))
 
 type WordEntry struct {
 	Word                  string
@@ -87,26 +116,9 @@ func ProcessWordResponse(content string) (string, error) {
 	return RenderWordTemplateToString(entry)
 }
 
-func RenderWordTemplate(data *WordEntry, writer io.Writer) error {
-	funcMap := template.FuncMap{
-		"add": func(a, b int) int {
-			return a + b
-		},
-	}
-
-	tmpl, err := template.New("word.html.tmpl").
-		Funcs(funcMap).
-		Parse(wordTemplateString)
-	if err != nil {
-		return err
-	}
-
-	return tmpl.Execute(writer, data)
-}
-
 func RenderWordTemplateToString(data *WordEntry) (string, error) {
 	var buf bytes.Buffer
-	if err := RenderWordTemplate(data, &buf); err != nil {
+	if err := wordTemplate.Execute(&buf, data); err != nil {
 		return "", err
 	}
 	return buf.String(), nil

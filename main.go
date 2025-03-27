@@ -153,7 +153,11 @@ func run() {
 			}
 			fmt.Println(renderedContent)
 		} else {
-			fmt.Println(content)
+			renderedContent, err := RenderSentenceTemplateToString(rootFlags.UserInput, content)
+			if err != nil {
+				panic(fmt.Sprintf("Template rendering failed: %v", err))
+			}
+			fmt.Println(renderedContent)
 		}
 	}
 }
