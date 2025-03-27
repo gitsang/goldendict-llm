@@ -126,7 +126,14 @@ func run() {
 	}
 
 	if len(apiResp.Choices) > 0 {
-		fmt.Println(apiResp.Choices[0].Message.Content)
+		if len(apiResp.Choices) > 0 {
+			content := apiResp.Choices[0].Message.Content
+			renderedContent, err := ProcessUserContent(content)
+			if err != nil {
+				panic(fmt.Sprintf("Template rendering failed: %v", err))
+			}
+			fmt.Println(renderedContent)
+		}
 	}
 }
 

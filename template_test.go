@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"os"
 	"testing"
 )
@@ -24,6 +26,9 @@ func TestRenderWordTemplate(t *testing.T) {
 
 func TestRenderWordTemplateToString(t *testing.T) {
 	wordEntry := GetSampleWordEntry()
+
+	wordEntryJsonBytes, _ := json.MarshalIndent(wordEntry, "", "  ")
+	fmt.Println(string(wordEntryJsonBytes))
 
 	html, err := RenderWordTemplateToString(wordEntry)
 	if err != nil {

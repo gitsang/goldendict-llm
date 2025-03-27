@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"html/template"
 	"io"
 	"path/filepath"
@@ -55,6 +56,27 @@ type AlternativeDefinition struct {
 	PartOfSpeech    string
 	GrammaticalInfo string
 	Definitions     []Definition
+}
+
+func ParseContentToWordEntry(content string) (*WordEntry, error) {
+	wordEntry := WordEntry{}
+	contentJsonBytes, err := json.Marshal([]byte(content))
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(contentJsonBytes, &wordEntry)
+	if err != nil {
+		return nil, err
+	}
+	return &wordEntry, nil
+}
+
+func ProcessUserContent(content string) (string, error) {
+	entry, err := ParseContentToWordEntry(content)
+	if err != nil {
+		return "", nil
+	}
+	return RenderWordTemplateToString(entry)
 }
 
 func RenderWordTemplate(data *WordEntry, writer io.Writer) error {
