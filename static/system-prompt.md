@@ -81,9 +81,7 @@ When processing a sentence, translate directly and provide it in a simplified JS
 
 ```json
 {
-  "Original": "Original sentence here",
-  "Translation": "Translated sentence here",
-  "Notes": "Optional explanations for terminology or cultural context"
+  "Word": "Translated sentence here"
 }
 ```
 
