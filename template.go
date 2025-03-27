@@ -2,12 +2,15 @@ package main
 
 import (
 	"bytes"
+	_ "embed"
 	"encoding/json"
 	"html/template"
 	"io"
-	"path/filepath"
 	"regexp"
 )
+
+//go:embed static/word.html.tmpl
+var wordTemplateString string
 
 type WordEntry struct {
 	Word                  string
@@ -93,7 +96,7 @@ func RenderWordTemplate(data *WordEntry, writer io.Writer) error {
 
 	tmpl, err := template.New("word.html.tmpl").
 		Funcs(funcMap).
-		ParseFiles(filepath.Join("static", "word.html.tmpl"))
+		Parse(wordTemplateString)
 	if err != nil {
 		return err
 	}
