@@ -1,0 +1,51 @@
+<div class="llm" lang="" style="display: inline" id="llm">
+  <div class="mdict">
+    <b style="color: blue; font-size: 150%">{{ .Word }}</b>
+    <hr color="blue" noshade="" />
+    <font color="blue" size="+1">{{ .Pronunciation.Syllables }}</font>
+    / <font face="Kingsoft Phonetic Plain, Tahoma" color="red">{{ .Pronunciation.Phonetic }}</font><font color="black">;</font><font face="Kingsoft Phonetic Plain, Tahoma" color="red"> {{ .Pronunciation.Alternative }}</font> /
+    <br />
+    <font color="red">◙</font><b style="color: darkred">{{ .PartOfSpeech }}</b><i style="color: darkgreen"> {{ .GrammaticalInfo }} </i>
+    <br />
+    {{ range $index, $definition := .Definitions }}
+    <b>{{ add $index 1 }}. </b><font>{{ $definition.English }}</font><br />
+    <font color="#ff5000">• {{ $definition.Chinese }}</font><br />
+    {{ if $definition.Synonym }}
+    <span style="color: red; margin-left: 5">【SYN】</span><b> <a href="gdlookup://localhost/{{ $definition.Synonym }}">{{ $definition.Synonym }}</a> </b><br />
+    {{ end }}
+    {{ range $example := $definition.Examples }}
+    <font color="#0044ff">&nbsp;»{{ $example.English }}</font><br />
+    <font style="color: #039; font-size: 90%">&nbsp;&nbsp;{{ $example.Chinese }}</font><br />
+    {{ end }}
+    {{ end }}
+    
+    {{ range $index, $idiom := .Idioms }}
+      <b>{{ add (add (len $.Definitions) $index) 1 }}. </b><b style="color: blue">{{ $idiom.Phrase }}</b>,
+    <font><i style="color: darkgreen"> {{ if $idiom.Style }}{{ $idiom.Style }} {{ end }}</i>{{ $idiom.English }}</font><br />
+    <font color="#ff5000">• {{ $idiom.Chinese }}</font><br />
+    {{ range $example := $idiom.Examples }}
+    <font color="#0044ff">&nbsp;»{{ $example.English }}</font><br />
+    <font style="color: #039; font-size: 90%">&nbsp;&nbsp;{{ $example.Chinese }}</font><br />
+    {{ end }}
+    {{ end }}
+    
+    {{ if .RelatedWords }}
+    <font color="red">♦</font><font color="blue"><b>{{ .RelatedWords.Word }}</b></font>
+    <font color="darkred">{{ .RelatedWords.PartOfSpeech }}</font><i style="color: darkgreen"> {{ .RelatedWords.GrammaticalInfo }} </i>
+    {{ end }}
+    <hr color="blue" noshade="" />
+    
+    {{ if .AlternativeDefinition }}
+    <font color="blue" size="+1">{{ .AlternativeDefinition.Word }}</font> <br />
+    <font color="red">◙</font><b style="color: darkred">{{ .AlternativeDefinition.PartOfSpeech }}</b><i style="color: darkgreen"> {{ .AlternativeDefinition.GrammaticalInfo }} </i><br />
+    {{ range $index, $definition := .AlternativeDefinition.Definitions }}
+    <b>{{ add $index 1 }}. </b><font>{{ $definition.English }}</font><br />
+    <font color="#ff5000">• {{ $definition.Chinese }}</font><br />
+      {{ range $example := $definition.Examples }}
+      <font color="#0044ff">&nbsp;»{{ $example.English }}</font><br />
+      <font style="color: #039; font-size: 90%">&nbsp;&nbsp;{{ $example.Chinese }}</font><br />
+      {{ end }}
+    {{ end }}
+    {{ end }}
+  </div>
+</div>
