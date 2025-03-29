@@ -1,29 +1,35 @@
 # goldendict-llm
 
-A GoldenDict external program written in Golang, using LLM API for translation.
+使用 Golang 编写的 GoldenDict 外部程序，用于对接 LLM API 进行翻译。
 
 ![](./resources/preview.png)
 
-## Usage
+## 使用方式
 
-### 1. Download Executable
+### 1. 下载可执行文件
 
-Download `goldendict-llm.exe` from [Release](https://github.com/gitsang/goldendict-llm/releases/latest)
+从 [Release](https://github.com/gitsang/goldendict-llm/releases/latest) 中下载 `goldendict-llm.exe`
 
-### 2. Write Configuration File
+### 2. 编写配置文件
+
+你可以定义不同的 Adapter 以便通过修改 `adapter` 字段快速切换。
 
 ```yaml
-adapter: openai
+adapter: siliconflow
 
 adapters:
   openai:
     url: "https://api.openai.com/v1/chat/completions"
     token: "your-api-key-here"
     model: "gpt-3.5-turbo"
+  siliconflow:
+    url: "https://api.siliconflow.cn/v1/chat/completions"
+    token: "your-api-key-here"
+    model: "Qwen/Qwen2.5-7B-Instruct"
 ```
 
-### 3. Configure Program in Dictionary
+### 3. 在词典中配置程序
 
-The command line should look similar to: `D:\Application\GoldenDict-ng\content\goldendict-llm\goldendict-llm.exe -c "D:\Application\GoldenDict-ng\content\goldendict-llm\configs\config.local.yaml" "%GDWORD%"`
+命令行应该类似如下：`C:\Application\GoldenDict\content\dicts\goldendict-llm\goldendict-llm.exe -c "C:\Application\GoldenDict\content\dicts\goldendict-llm\configs\config.local.yaml" "%GDWORD%"`
 
 ![](./resources/add-external-program.png)
