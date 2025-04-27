@@ -2,7 +2,7 @@
 
 使用 Golang 编写的 GoldenDict 外部程序，用于对接 LLM API 进行翻译。
 
-![](./resources/preview.png)
+![preview.png](./resources/preview.png)
 
 ## 使用方式
 
@@ -32,4 +32,4 @@ adapters:
 
 命令行应该类似如下：`C:\Application\GoldenDict\content\dicts\goldendict-llm\goldendict-llm.exe -c "C:\Application\GoldenDict\content\dicts\goldendict-llm\configs\config.local.yaml" "%GDWORD%"`
 
-![](./resources/add-external-program.png)
+![add-external-program.png](./resources/add-external-program.png)
