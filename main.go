@@ -139,11 +139,16 @@ func run() {
 		promptTemplate = SentencePrompt
 	}
 
+	renderedUserInput, err := RenderUserInputTemplateToString(rootFlags.UserInput)
+	if err != nil {
+		panic(fmt.Errorf("RenderUserInputTemplateToString failed: %v", err))
+	}
+
 	reqBody := Request{
 		Model: adapterConfig.Model,
 		Messages: []Message{
 			{Role: "system", Content: promptTemplate},
-			{Role: "user", Content: rootFlags.UserInput},
+			{Role: "user", Content: renderedUserInput},
 		},
 	}
 	jsonData, err := json.Marshal(reqBody)

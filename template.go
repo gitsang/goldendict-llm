@@ -13,6 +13,11 @@ var sentenceTemplateString string
 
 var sentenceTemplate = template.Must(template.New("sentence.html.tmpl").Parse(sentenceTemplateString))
 
+//go:embed static/user-input.md
+var userInputTemplateString string
+
+var userInputTemplate = template.Must(template.New("user-input.md").Parse(userInputTemplateString))
+
 type SentenceEntry struct {
 	Sentence    string
 	Translation string
@@ -119,6 +124,14 @@ func ProcessWordResponse(content string) (string, error) {
 func RenderWordTemplateToString(data *WordEntry) (string, error) {
 	var buf bytes.Buffer
 	if err := wordTemplate.Execute(&buf, data); err != nil {
+		return "", err
+	}
+	return buf.String(), nil
+}
+
+func RenderUserInputTemplateToString(userInput string) (string, error) {
+	var buf bytes.Buffer
+	if err := userInputTemplate.Execute(&buf, userInput); err != nil {
 		return "", err
 	}
 	return buf.String(), nil
