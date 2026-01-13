@@ -152,18 +152,18 @@ func run() {
 		panic(fmt.Sprintf("Json unmarshal failed: %v", err))
 	}
 
-	duration := time.Since(startTime)
+	duration := fmt.Sprintf("%.2fs", time.Since(startTime).Seconds())
 	if len(apiResp.Choices) > 0 {
 		content := apiResp.Choices[0].Message.Content
 		if strings.HasPrefix(strings.TrimSpace(rootFlags.UserInput), "S:") {
 			actualUserInput := userInputForAPI
-			renderedContent, err := RenderSentenceTemplateToString(actualUserInput, content, c.Adapter, adapterConfig.Model, duration.String())
+			renderedContent, err := RenderSentenceTemplateToString(actualUserInput, content, c.Adapter, adapterConfig.Model, duration)
 			if err != nil {
 				panic(fmt.Sprintf("Template rendering failed: %v", err))
 			}
 			fmt.Println(renderedContent)
 		} else {
-			renderedContent, err := ProcessWordResponseWithAdapterInfo(content, c.Adapter, adapterConfig.Model, duration.String())
+			renderedContent, err := ProcessWordResponseWithAdapterInfo(content, c.Adapter, adapterConfig.Model, duration)
 			if err != nil {
 				panic(fmt.Sprintf("Template rendering failed: %v", err))
 			}
