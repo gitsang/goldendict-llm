@@ -5,3 +5,7 @@ adapters:
     url: "https://api.openai.com/v1/chat/completions"
     token: "your-api-key-here"
     model: "gpt-3.5-turbo"
+
+cache:
+  enabled: true
+  location: /tmp/goldendict-llm

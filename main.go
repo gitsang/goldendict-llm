@@ -1,11 +1,7 @@
 package main
 
 import (
-	"bytes"
-	_ "embed"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -14,16 +10,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type Adapter struct {
-	URL   string
-	Token string
-	Model string
+type CacheConfig struct {
+	Enabled  bool   `default:"false"`
+	Location string `default:"/tmp/goldendict-llm"`
 }
 
 type Config struct {
 	Adapter  string
-	Adapters map[string]Adapter
+	Adapters map[string]AdapterConfig
 	Timeout  string `default:"30s"`
+	Cache    CacheConfig
 }
 
 var rootCmd = &cobra.Command{
@@ -39,12 +35,6 @@ var rootFlags = struct {
 }{}
 
 var cfger *configer.Configer
-
-//go:embed static/word-prompt.md
-var WordPrompt string
-
-//go:embed static/sentence-prompt.md
-var SentencePrompt string
 
 func joinArgs(args []string) string {
 	return strings.Join(args, " ")
@@ -63,7 +53,7 @@ func init() {
 	cfger = configer.New(
 		configer.WithTemplate(new(Config)),
 		configer.WithEnvBind(
-			configer.WithEnvPrefix("GOLDEN_DICT_LLM"),
+			configer.WithEnvPrefix("GOLDENDICT_LLM"),
 			configer.WithEnvDelim("_"),
 		),
 		configer.WithFlagBind(
@@ -81,94 +71,39 @@ func run() {
 		panic(err)
 	}
 
-	timeout, err := time.ParseDuration(c.Timeout)
-	if err != nil {
-		panic(fmt.Sprintf("Invalid timeout: %v", err))
-	}
-
-	client := &http.Client{
-		Timeout: timeout,
-	}
-
+	// adapter
 	adapterConfig, ok := c.Adapters[c.Adapter]
 	if !ok {
 		panic(fmt.Errorf("adapter %s not found", c.Adapter))
 	}
 
-	promptTemplate := WordPrompt
-	var userInputForAPI string
-	trimmedInput := strings.TrimSpace(rootFlags.UserInput)
-	if strings.HasPrefix(trimmedInput, "S:") {
-		promptTemplate = SentencePrompt
-		userInputForAPI = strings.TrimSpace(strings.TrimPrefix(trimmedInput, "S:"))
-	} else {
-		userInputForAPI = trimmedInput
-	}
-
-	renderedUserInput, err := RenderUserInputTemplateToString(userInputForAPI)
+	// http client
+	timeout, err := time.ParseDuration(c.Timeout)
 	if err != nil {
-		panic(fmt.Errorf("RenderUserInputTemplateToString failed: %v", err))
+		panic(fmt.Sprintf("Invalid timeout: %v", err))
+	}
+	httpClient := &http.Client{
+		Timeout: timeout,
 	}
 
-	startTime := time.Now()
-	reqBody := Request{
-		Model: adapterConfig.Model,
-		Messages: []Message{
-			{Role: "system", Content: promptTemplate},
-			{Role: "user", Content: renderedUserInput},
-		},
-	}
-	jsonData, err := json.Marshal(reqBody)
-	if err != nil {
-		panic(fmt.Sprintf("Json marshal failed: %v", err))
+	// cache
+	var cache *Cache
+	if c.Cache.Enabled {
+		cache = NewCache(c.Cache.Location)
 	}
 
-	req, err := http.NewRequest("POST", adapterConfig.URL, bytes.NewBuffer(jsonData))
-	if err != nil {
-		panic(fmt.Errorf("NewRequest failed: %v", err))
-	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+adapterConfig.Token)
+	// translator
+	translator := NewTranslator(adapterConfig,
+		WithCache(cache),
+		WithHTTPClient(httpClient),
+	)
 
-	resp, err := client.Do(req)
-	if err != nil {
-		panic(fmt.Sprintf("API request failed: %v", err))
-	}
-	defer func() {
-		_ = resp.Body.Close()
-	}()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		panic(fmt.Errorf("ReadAll failed: %v", err))
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		panic(fmt.Sprintf("API request failed with status: %d", resp.StatusCode))
-	}
-
-	var apiResp Response
-	if err := json.Unmarshal(body, &apiResp); err != nil {
-		panic(fmt.Sprintf("Json unmarshal failed: %v", err))
-	}
-
-	duration := fmt.Sprintf("%.2fs", time.Since(startTime).Seconds())
-	if len(apiResp.Choices) > 0 {
-		content := apiResp.Choices[0].Message.Content
-		if strings.HasPrefix(strings.TrimSpace(rootFlags.UserInput), "S:") {
-			actualUserInput := userInputForAPI
-			renderedContent, err := RenderSentenceTemplateToString(actualUserInput, content, c.Adapter, adapterConfig.Model, duration)
-			if err != nil {
-				panic(fmt.Sprintf("Template rendering failed: %v", err))
-			}
-			fmt.Println(renderedContent)
-		} else {
-			renderedContent, err := ProcessWordResponseWithAdapterInfo(content, c.Adapter, adapterConfig.Model, duration)
-			if err != nil {
-				panic(fmt.Sprintf("Template rendering failed: %v", err))
-			}
-			fmt.Println(renderedContent)
+	if input, found := strings.CutPrefix(rootFlags.UserInput, "S:"); !found {
+		result, err := translator.TranslateWord(input)
+		if err != nil {
+			panic(err)
 		}
+		fmt.Println(result)
 	}
 }
 
