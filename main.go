@@ -167,7 +167,9 @@ func run() {
 	if err != nil {
 		panic(fmt.Sprintf("API request failed: %v", err))
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -202,5 +204,7 @@ func run() {
 }
 
 func main() {
-	rootCmd.Execute()
+	if err := rootCmd.Execute(); err != nil {
+		panic(err)
+	}
 }
