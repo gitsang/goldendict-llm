@@ -1,13 +1,17 @@
 <div class="llm" lang="" style="display: inline" id="llm">
   <div class="mdict">
-    <div style="float: left;">
-      <b style="color: blue; font-size: 150%">{{ .Word }}</b>
+    <div>
+      <div style="float: left;">
+        <b style="color: blue; font-size: 150%">{{ .Word }}</b>
+      </div>
+      <div style="float: right; text-align: right;">
+        <b style="color: gray; font-size: 80%">{{ .AdapterName }}</b>
+        <b style="color: gray; font-size: 80%">({{ .Model }})</b>
+        <span style="color: gray; font-size: 70%">  {{ .Duration }}</span>
+      </div>
+      <div style="clear: both;"></div>
     </div>
-    <div style="float: right; text-align: right;">
-      <b style="color: gray; font-size: 80%">{{ .AdapterName }}</b>
-      <b style="color: gray; font-size: 80%">({{ .Model }})</b>
-      <span style="color: gray; font-size: 40%">  {{ .Duration }}</span>
-    </div>
+
     <hr color="blue" noshade="" />
     <font color="blue" size="+1">{{ .Pronunciation.Syllables }}</font>
     / <font face="Kingsoft Phonetic Plain, Tahoma" color="red">{{ .Pronunciation.Phonetic }}</font><font color="black">;</font><font face="Kingsoft Phonetic Plain, Tahoma" color="red"> {{ .Pronunciation.Alternative }}</font> /
