@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"strings"
 	"time"
-	"unicode"
 
 	"github.com/gitsang/configer"
 	"github.com/spf13/cobra"
@@ -75,44 +74,6 @@ func init() {
 	)
 }
 
-func isWord(content string) bool {
-	trimmed := strings.TrimSpace(content)
-	if len(trimmed) == 0 {
-		return false
-	}
-	if strings.Contains(trimmed, " ") {
-		return false
-	}
-	for _, sep := range []string{",", ".", ";", ":", "，", "。", "；", "：", "、"} {
-		if strings.Contains(trimmed, sep) {
-			return false
-		}
-	}
-
-	chineseCharCount := 0
-	englishCharCount := 0
-	for _, r := range trimmed {
-		if unicode.Is(unicode.Han, r) {
-			chineseCharCount++
-		} else if unicode.IsLetter(r) {
-			englishCharCount++
-		}
-
-		if chineseCharCount > 4 {
-			return false
-		}
-		if chineseCharCount == 0 && englishCharCount > 32 {
-			return false
-		}
-
-		if chineseCharCount > 0 && (chineseCharCount+englishCharCount) > 16 {
-			return false
-		}
-	}
-
-	return true
-}
-
 func run() {
 	var c Config
 	err := cfger.Load(&c, rootFlags.ConfigPaths...)
@@ -135,11 +96,16 @@ func run() {
 	}
 
 	promptTemplate := WordPrompt
-	if !isWord(rootFlags.UserInput) {
+	var userInputForAPI string
+	trimmedInput := strings.TrimSpace(rootFlags.UserInput)
+	if strings.HasPrefix(trimmedInput, "S:") {
 		promptTemplate = SentencePrompt
+		userInputForAPI = strings.TrimSpace(strings.TrimPrefix(trimmedInput, "S:"))
+	} else {
+		userInputForAPI = trimmedInput
 	}
 
-	renderedUserInput, err := RenderUserInputTemplateToString(rootFlags.UserInput)
+	renderedUserInput, err := RenderUserInputTemplateToString(userInputForAPI)
 	if err != nil {
 		panic(fmt.Errorf("RenderUserInputTemplateToString failed: %v", err))
 	}
@@ -189,14 +155,15 @@ func run() {
 	duration := time.Since(startTime)
 	if len(apiResp.Choices) > 0 {
 		content := apiResp.Choices[0].Message.Content
-		if isWord(rootFlags.UserInput) {
-			renderedContent, err := ProcessWordResponseWithAdapterInfo(content, c.Adapter, adapterConfig.Model, duration.String())
+		if strings.HasPrefix(strings.TrimSpace(rootFlags.UserInput), "S:") {
+			actualUserInput := userInputForAPI
+			renderedContent, err := RenderSentenceTemplateToString(actualUserInput, content, c.Adapter, adapterConfig.Model, duration.String())
 			if err != nil {
 				panic(fmt.Sprintf("Template rendering failed: %v", err))
 			}
 			fmt.Println(renderedContent)
 		} else {
-			renderedContent, err := RenderSentenceTemplateToString(rootFlags.UserInput, content, c.Adapter, adapterConfig.Model, duration.String())
+			renderedContent, err := ProcessWordResponseWithAdapterInfo(content, c.Adapter, adapterConfig.Model, duration.String())
 			if err != nil {
 				panic(fmt.Sprintf("Template rendering failed: %v", err))
 			}

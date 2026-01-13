@@ -1,5 +1,8 @@
 <div class="llm" lang="" style="display: inline" id="llm">
   <div class="mdict">
+    <b style="color: gray; font-size: 80%">{{ .AdapterName }}</b>
+    <b style="color: gray; font-size: 80%">{{ .Model }}</b>
+    <b style="color: gray; font-size: 80%">{{ .Duration }}</b>
     <div style="position: absolute; top: 0; right: 0; text-align: right; font-size: 80%; color: #666;">
       <div>{{ .AdapterName }}</div>
       <div>{{ .Model }}</div>
@@ -34,16 +37,11 @@
     {{ end }}
     {{ end }}
     
-    {{ if .RelatedWords }}
-    <font color="red">♦</font><font color="blue"><b>{{ .RelatedWords.Word }}</b></font>
-    <font color="darkred">{{ .RelatedWords.PartOfSpeech }}</font><i style="color: darkgreen"> {{ .RelatedWords.GrammaticalInfo }} </i>
-    {{ end }}
-    <hr color="blue" noshade="" />
-    
     {{ if .AlternativeDefinition }}
     <font color="blue" size="+1">{{ .AlternativeDefinition.Word }}</font> <br />
     <font color="red">◙</font><b style="color: darkred">{{ .AlternativeDefinition.PartOfSpeech }}</b><i style="color: darkgreen"> {{ .AlternativeDefinition.GrammaticalInfo }} </i><br />
     {{ range $index, $definition := .AlternativeDefinition.Definitions }}
+    <hr color="blue" noshade="" />
     <b>{{ add $index 1 }}. </b><font>{{ $definition.English }}</font><br />
     <font color="#ff5000">• {{ $definition.Chinese }}</font><br />
       {{ range $example := $definition.Examples }}
@@ -51,6 +49,12 @@
       <font style="color: #039; font-size: 90%">&nbsp;&nbsp;{{ $example.Chinese }}</font><br />
       {{ end }}
     {{ end }}
+    {{ end }}
+    
+    {{ if .RelatedWords }}
+    <hr color="blue" noshade="" />
+    <font color="red">♦</font><font color="blue"><b>{{ .RelatedWords.Word }}</b></font>
+    <font color="darkred">{{ .RelatedWords.PartOfSpeech }}</font><i style="color: darkgreen"> {{ .RelatedWords.GrammaticalInfo }} </i>
     {{ end }}
   </div>
 </div>
