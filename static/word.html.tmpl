@@ -41,10 +41,10 @@
     {{ end }}
     
     {{ if .AlternativeDefinition }}
+    <hr color="blue" noshade="" />
     <font color="blue" size="+1">{{ .AlternativeDefinition.Word }}</font> <br />
     <font color="red">◙</font><b style="color: darkred">{{ .AlternativeDefinition.PartOfSpeech }}</b><i style="color: darkgreen"> {{ .AlternativeDefinition.GrammaticalInfo }} </i><br />
     {{ range $index, $definition := .AlternativeDefinition.Definitions }}
-    <hr color="blue" noshade="" />
     <b>{{ add $index 1 }}. </b><font>{{ $definition.English }}</font><br />
     <font color="#ff5000">• {{ $definition.Chinese }}</font><br />
       {{ range $example := $definition.Examples }}
