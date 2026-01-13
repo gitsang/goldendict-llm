@@ -12,7 +12,7 @@ func TestRenderWordTemplateToString(t *testing.T) {
 	wordEntryJsonBytes, _ := json.MarshalIndent(wordEntry, "", "  ")
 	fmt.Println(string(wordEntryJsonBytes))
 
-	html, err := RenderWordTemplateToString(wordEntry)
+	html, err := RenderWordTemplateToString(wordEntry, "test-adapter", "test-model", "1.23s")
 	if err != nil {
 		t.Fatalf("Render failed: %v", err)
 	}
@@ -22,6 +22,13 @@ func TestRenderWordTemplateToString(t *testing.T) {
 	}
 
 	t.Logf("Render success: %d", len(html))
+
+	// Print the first 500 characters to verify adapter info is included
+	if len(html) > 500 {
+		t.Logf("HTML preview (first 500 chars): %s", html[:500])
+	} else {
+		t.Logf("HTML preview: %s", html)
+	}
 }
 
 func GetSampleWordEntry() *WordEntry {

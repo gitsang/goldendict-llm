@@ -144,6 +144,7 @@ func run() {
 		panic(fmt.Errorf("RenderUserInputTemplateToString failed: %v", err))
 	}
 
+	startTime := time.Now()
 	reqBody := Request{
 		Model: adapterConfig.Model,
 		Messages: []Message{
@@ -185,16 +186,17 @@ func run() {
 		panic(fmt.Sprintf("Json unmarshal failed: %v", err))
 	}
 
+	duration := time.Since(startTime)
 	if len(apiResp.Choices) > 0 {
 		content := apiResp.Choices[0].Message.Content
 		if isWord(rootFlags.UserInput) {
-			renderedContent, err := ProcessWordResponse(content)
+			renderedContent, err := ProcessWordResponseWithAdapterInfo(content, c.Adapter, adapterConfig.Model, duration.String())
 			if err != nil {
 				panic(fmt.Sprintf("Template rendering failed: %v", err))
 			}
 			fmt.Println(renderedContent)
 		} else {
-			renderedContent, err := RenderSentenceTemplateToString(rootFlags.UserInput, content)
+			renderedContent, err := RenderSentenceTemplateToString(rootFlags.UserInput, content, c.Adapter, adapterConfig.Model, duration.String())
 			if err != nil {
 				panic(fmt.Sprintf("Template rendering failed: %v", err))
 			}

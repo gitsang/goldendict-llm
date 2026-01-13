@@ -21,14 +21,20 @@ var userInputTemplate = template.Must(template.New("user-input.md").Parse(userIn
 type SentenceEntry struct {
 	Sentence    string
 	Translation string
+	AdapterName string
+	Model       string
+	Duration    string
 }
 
-func RenderSentenceTemplateToString(sentence, translation string) (string, error) {
+func RenderSentenceTemplateToString(sentence, translation, adapterName, model, duration string) (string, error) {
 	var buf bytes.Buffer
 	if err := sentenceTemplate.Execute(&buf,
 		SentenceEntry{
 			Sentence:    sentence,
 			Translation: translation,
+			AdapterName: adapterName,
+			Model:       model,
+			Duration:    duration,
 		}); err != nil {
 		return "", err
 	}
@@ -55,6 +61,9 @@ type WordEntry struct {
 	Idioms                []Idiom
 	RelatedWords          *RelatedWord
 	AlternativeDefinition *AlternativeDefinition
+	AdapterName           string
+	Model                 string
+	Duration              string
 }
 
 type Pronunciation struct {
@@ -114,14 +123,21 @@ func RemoveMarkdownCodeBlockTags(content string) string {
 }
 
 func ProcessWordResponse(content string) (string, error) {
+	return ProcessWordResponseWithAdapterInfo(content, "", "", "")
+}
+
+func ProcessWordResponseWithAdapterInfo(content, adapterName, model, duration string) (string, error) {
 	entry, err := ParseContentToWordEntry(RemoveMarkdownCodeBlockTags(content))
 	if err != nil {
 		return "", nil
 	}
-	return RenderWordTemplateToString(entry)
+	return RenderWordTemplateToString(entry, adapterName, model, duration)
 }
 
-func RenderWordTemplateToString(data *WordEntry) (string, error) {
+func RenderWordTemplateToString(data *WordEntry, adapterName, model, duration string) (string, error) {
+	data.AdapterName = adapterName
+	data.Model = model
+	data.Duration = duration
 	var buf bytes.Buffer
 	if err := wordTemplate.Execute(&buf, data); err != nil {
 		return "", err
