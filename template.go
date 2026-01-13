@@ -53,6 +53,10 @@ var funcMap = template.FuncMap{
 var wordTemplate = template.Must(template.New("word.html.tmpl").Funcs(funcMap).Parse(wordTemplateString))
 
 type WordEntry struct {
+	AdapterName string
+	Model       string
+	Duration    string
+
 	Word                  string
 	Pronunciation         Pronunciation
 	PartOfSpeech          string
@@ -61,9 +65,6 @@ type WordEntry struct {
 	Idioms                []Idiom
 	RelatedWords          *RelatedWord
 	AlternativeDefinition *AlternativeDefinition
-	AdapterName           string
-	Model                 string
-	Duration              string
 }
 
 type Pronunciation struct {

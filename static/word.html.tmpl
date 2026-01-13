@@ -42,7 +42,7 @@
     {{ end }}
     {{ end }}
 
-    {{ if .AlternativeDefinition }}
+    {{ if and .AlternativeDefinition .AlternativeDefinition.Word }}
     <hr color="blue" noshade="" />
     <font color="blue" size="+1">{{ .AlternativeDefinition.Word }}</font> <br />
     <font color="red">◙</font><b style="color: darkred">{{ .AlternativeDefinition.PartOfSpeech }}</b><i style="color: darkgreen"> {{ .AlternativeDefinition.GrammaticalInfo }} </i><br />
@@ -56,7 +56,7 @@
     {{ end }}
     {{ end }}
 
-    {{ if .RelatedWords }}
+    {{ if and .RelatedWords .RelatedWords.Word }}
     <hr color="blue" noshade="" />
     <font color="red">♦</font><font color="blue"><b>{{ .RelatedWords.Word }}</b></font>
     <font color="darkred">{{ .RelatedWords.PartOfSpeech }}</font><i style="color: darkgreen"> {{ .RelatedWords.GrammaticalInfo }} </i>
