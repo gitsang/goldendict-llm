@@ -1,11 +1,22 @@
 <div class="llm" lang="" style="display: inline" id="llm">
   <div class="mdict">
-    <div style="position: absolute; top: 0; right: 0; text-align: right; font-size: 80%; color: #666;">
-      <div>{{ .AdapterName }}</div>
-      <div>{{ .Model }}</div>
-      <div>{{ .Duration }}</div>
+    <div style="display: flex; align-items: flex-end;">
+      <div style="flex: 1;">
+        <b style="color: blue; font-size: 150%">Sentence Translation</b>
+      </div>
+
+      <div style="text-align: right;">
+        <div>
+          <b style="color: gray; font-size: 80%">{{ .AdapterName }}</b>
+          <b style="color: gray; font-size: 80%">({{ .Model }})</b>
+        </div>
+        <span style="color: gray; font-size: 70%">{{ .Duration }}</span>
+      </div>
     </div>
-    <b style="color: black; font-size: 100%">{{ .Sentence }}</b></br>
-    <b style="color: gray; font-size: 100%">{{ .Translation }}</b>
+    <hr color="blue" noshade="" />
+
+    <b style="color: black; font-size: 100%">{{ .Sentence }}</b>
+    </br>
+    <span style="color: gray; font-size: 100%">{{ .Translation }}</span>
   </div>
 </div>
