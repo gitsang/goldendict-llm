@@ -4,17 +4,19 @@ import (
 	"bytes"
 	_ "embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"time"
 )
 
-//go:embed static/word-prompt.md
-var WordPrompt string
+type TranslateTemplate string
 
-//go:embed static/sentence-prompt.md
-var SentencePrompt string
+const (
+	TranslateTemplateWord     TranslateTemplate = "word"
+	TranslateTemplateSencense TranslateTemplate = "sentense"
+)
 
 type AdapterConfig struct {
 	Name  string
@@ -58,8 +60,6 @@ func (t *Translator) TranslateWord(word string) (string, error) {
 	var (
 		startTime = time.Now()
 		err       error
-		result    string
-		duration  string
 	)
 
 	renderedUserInput, err := RenderUserInputTemplateToString(word)
@@ -74,6 +74,49 @@ func (t *Translator) TranslateWord(word string) (string, error) {
 			{Role: "user", Content: renderedUserInput},
 		},
 	}
+	result, err := t.request(reqBody)
+	if err != nil {
+		return "", err
+	}
+
+	renderedContent, err := ProcessWordResponseWithAdapterInfo(result, t.adapter.Name, t.adapter.Model, fmt.Sprintf("%.2fs", time.Since(startTime).Seconds()))
+	if err != nil {
+		return "", err
+	}
+	return renderedContent, nil
+}
+
+func (t *Translator) TranslateSentense(sentense string) (string, error) {
+	var (
+		startTime = time.Now()
+		err       error
+	)
+
+	renderedUserInput, err := RenderUserInputTemplateToString(sentense)
+	if err != nil {
+		return "", fmt.Errorf("RenderUserInputTemplateToString failed: %v", err)
+	}
+
+	reqBody := Request{
+		Model: t.adapter.Model,
+		Messages: []Message{
+			{Role: "system", Content: SentencePrompt},
+			{Role: "user", Content: renderedUserInput},
+		},
+	}
+	result, err := t.request(reqBody)
+	if err != nil {
+		return "", err
+	}
+
+	renderedContent, err := ProcessWordResponseWithAdapterInfo(result, t.adapter.Name, t.adapter.Model, fmt.Sprintf("%.2fs", time.Since(startTime).Seconds()))
+	if err != nil {
+		return "", err
+	}
+	return renderedContent, nil
+}
+
+func (t *Translator) request(reqBody Request) (string, error) {
 	reqBodyBytes, err := json.Marshal(reqBody)
 	if err != nil {
 		return "", fmt.Errorf("json marshal failed: %v", err)
@@ -108,14 +151,9 @@ func (t *Translator) TranslateWord(word string) (string, error) {
 		return "", fmt.Errorf("json unmarshal failed: %v", err)
 	}
 
-	if len(responseBody.Choices) > 0 {
-		result = responseBody.Choices[0].Message.Content
+	if len(responseBody.Choices) <= 0 {
+		return "", errors.New("no choices responsed")
 	}
-	duration = fmt.Sprintf("%.2fs", time.Since(startTime).Seconds())
 
-	renderedContent, err := ProcessWordResponseWithAdapterInfo(result, t.adapter.Name, t.adapter.Model, duration)
-	if err != nil {
-		return "", err
-	}
-	return renderedContent, nil
+	return responseBody.Choices[0].Message.Content, nil
 }
