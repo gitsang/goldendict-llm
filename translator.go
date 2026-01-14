@@ -62,11 +62,11 @@ func (t *Translator) TranslateWord(word string) (string, error) {
 		err       error
 	)
 
+	// request
 	renderedUserInput, err := RenderUserInputTemplateToString(word)
 	if err != nil {
 		return "", fmt.Errorf("RenderUserInputTemplateToString failed: %v", err)
 	}
-
 	reqBody := Request{
 		Model: t.adapter.Model,
 		Messages: []Message{
@@ -79,24 +79,32 @@ func (t *Translator) TranslateWord(word string) (string, error) {
 		return "", err
 	}
 
-	renderedContent, err := ProcessWordResponseWithAdapterInfo(result, t.adapter.Name, t.adapter.Model, fmt.Sprintf("%.2fs", time.Since(startTime).Seconds()))
+	// render
+	entry, err := ParseContentToWordEntry(RemoveMarkdownCodeBlockTags(result))
+	if err != nil {
+		return "", nil
+	}
+	entry.AdapterName = t.adapter.Name
+	entry.Model = t.adapter.Model
+	entry.Duration = fmt.Sprintf("%.2fs", time.Since(startTime).Seconds())
+	renderedContent, err := RenderWordTemplateToString(entry)
 	if err != nil {
 		return "", err
 	}
 	return renderedContent, nil
 }
 
-func (t *Translator) TranslateSentense(sentense string) (string, error) {
+func (t *Translator) TranslateSentense(sentence string) (string, error) {
 	var (
 		startTime = time.Now()
 		err       error
 	)
 
-	renderedUserInput, err := RenderUserInputTemplateToString(sentense)
+	// request
+	renderedUserInput, err := RenderUserInputTemplateToString(sentence)
 	if err != nil {
 		return "", fmt.Errorf("RenderUserInputTemplateToString failed: %v", err)
 	}
-
 	reqBody := Request{
 		Model: t.adapter.Model,
 		Messages: []Message{
@@ -109,7 +117,14 @@ func (t *Translator) TranslateSentense(sentense string) (string, error) {
 		return "", err
 	}
 
-	renderedContent, err := ProcessWordResponseWithAdapterInfo(result, t.adapter.Name, t.adapter.Model, fmt.Sprintf("%.2fs", time.Since(startTime).Seconds()))
+	// render
+	renderedContent, err := RenderSentenceTemplateToString(&SentenceEntry{
+		AdapterName: t.adapter.Name,
+		Model:       t.adapter.Model,
+		Duration:    fmt.Sprintf("%.2fs", time.Since(startTime).Seconds()),
+		Sentence:    sentence,
+		Translation: RemoveMarkdownCodeBlockTags(result),
+	})
 	if err != nil {
 		return "", err
 	}

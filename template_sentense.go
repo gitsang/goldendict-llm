@@ -23,16 +23,9 @@ type SentenceEntry struct {
 	Translation string
 }
 
-func RenderSentenceTemplateToString(sentence, translation, adapterName, model, duration string) (string, error) {
+func RenderSentenceTemplateToString(entry *SentenceEntry) (string, error) {
 	var buf bytes.Buffer
-	if err := sentenceTemplate.Execute(&buf,
-		SentenceEntry{
-			AdapterName: adapterName,
-			Model:       model,
-			Duration:    duration,
-			Sentence:    sentence,
-			Translation: translation,
-		}); err != nil {
+	if err := sentenceTemplate.Execute(&buf, entry); err != nil {
 		return "", err
 	}
 	return buf.String(), nil

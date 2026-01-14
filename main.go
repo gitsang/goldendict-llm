@@ -91,6 +91,12 @@ func run() {
 			panic(err)
 		}
 		fmt.Println(result)
+	} else {
+		result, err := translator.TranslateSentense(input)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(result)
 	}
 }
 

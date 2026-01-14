@@ -5,7 +5,6 @@ import (
 	_ "embed"
 	"encoding/json"
 	"html/template"
-	"regexp"
 )
 
 //go:embed static/word-prompt.md
@@ -70,22 +69,6 @@ type AlternativeDefinition struct {
 	Definitions     []Definition
 }
 
-func RenderUserInputTemplateToString(userInput string) (string, error) {
-	var buf bytes.Buffer
-	if err := userInputTemplate.Execute(&buf, userInput); err != nil {
-		return "", err
-	}
-	return buf.String(), nil
-}
-
-func RemoveMarkdownCodeBlockTags(content string) string {
-	startRegex := regexp.MustCompile("(?m)^```.*\\n")
-	endRegex := regexp.MustCompile("(?m)^```\\s*$")
-	content = endRegex.ReplaceAllString(content, "")
-	content = startRegex.ReplaceAllString(content, "")
-	return content
-}
-
 func ParseContentToWordEntry(content string) (*WordEntry, error) {
 	wordEntry := WordEntry{}
 	err := json.Unmarshal([]byte(content), &wordEntry)
@@ -95,21 +78,10 @@ func ParseContentToWordEntry(content string) (*WordEntry, error) {
 	return &wordEntry, nil
 }
 
-func RenderWordTemplateToString(data *WordEntry, adapterName, model, duration string) (string, error) {
-	data.AdapterName = adapterName
-	data.Model = model
-	data.Duration = duration
+func RenderWordTemplateToString(entry *WordEntry) (string, error) {
 	var buf bytes.Buffer
-	if err := wordTemplate.Execute(&buf, data); err != nil {
+	if err := wordTemplate.Execute(&buf, entry); err != nil {
 		return "", err
 	}
 	return buf.String(), nil
-}
-
-func ProcessWordResponseWithAdapterInfo(content, adapterName, model, duration string) (string, error) {
-	entry, err := ParseContentToWordEntry(RemoveMarkdownCodeBlockTags(content))
-	if err != nil {
-		return "", nil
-	}
-	return RenderWordTemplateToString(entry, adapterName, model, duration)
 }
