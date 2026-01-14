@@ -70,6 +70,7 @@ func run() {
 	if !ok {
 		panic(fmt.Errorf("adapter %s not found", c.Adapter))
 	}
+	adapterConfig.Name = c.Adapter
 
 	// http client
 	timeout, err := time.ParseDuration(c.Timeout)
