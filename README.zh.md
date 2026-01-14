@@ -1,5 +1,7 @@
 # goldendict-llm
 
+中文 | [English](README.md)
+
 使用 Golang 编写的 GoldenDict 外部程序，用于对接 LLM API 进行翻译。
 
 ![preview.png](./resources/preview.png)

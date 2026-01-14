@@ -1,5 +1,7 @@
 # goldendict-llm
 
+[中文](README.zh.md) | English
+
 GoldenDict external program written in Golang for translating with LLM API.
 
 ![preview.png](./resources/preview.png)
