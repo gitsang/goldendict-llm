@@ -26,18 +26,11 @@ type AdapterConfig struct {
 // Translator handles translation requests with caching
 type Translator struct {
 	adapter AdapterConfig
-	cache   *Cache
 	client  *http.Client
 }
 
 // TranslatorOption defines a function that configures a Translator
 type TranslatorOption func(*Translator)
-
-func WithCache(cache *Cache) TranslatorOption {
-	return func(t *Translator) {
-		t.cache = cache
-	}
-}
 
 // WithHTTPClient sets a custom HTTP client for the translator
 func WithHTTPClient(client *http.Client) TranslatorOption {
@@ -50,7 +43,6 @@ func WithHTTPClient(client *http.Client) TranslatorOption {
 func NewTranslator(adapter AdapterConfig, opts ...TranslatorOption) *Translator {
 	translator := &Translator{
 		adapter: adapter,
-		cache:   nil,
 		client:  http.DefaultClient,
 	}
 
@@ -75,60 +67,51 @@ func (t *Translator) TranslateWord(word string) (string, error) {
 		return "", fmt.Errorf("RenderUserInputTemplateToString failed: %v", err)
 	}
 
-	if t.cache != nil {
-		result, err = t.cache.Load(word)
-		if err == nil {
-			duration = "cached"
-		}
+	reqBody := Request{
+		Model: t.adapter.Model,
+		Messages: []Message{
+			{Role: "system", Content: WordPrompt},
+			{Role: "user", Content: renderedUserInput},
+		},
+	}
+	reqBodyBytes, err := json.Marshal(reqBody)
+	if err != nil {
+		return "", fmt.Errorf("json marshal failed: %v", err)
 	}
 
-	if duration != "cached" {
-		reqBody := Request{
-			Model: t.adapter.Model,
-			Messages: []Message{
-				{Role: "system", Content: WordPrompt},
-				{Role: "user", Content: renderedUserInput},
-			},
-		}
-		reqBodyBytes, err := json.Marshal(reqBody)
-		if err != nil {
-			return "", fmt.Errorf("json marshal failed: %v", err)
-		}
-
-		req, err := http.NewRequest("POST", t.adapter.URL, bytes.NewBuffer(reqBodyBytes))
-		if err != nil {
-			return "", fmt.Errorf("NewRequest failed: %v", err)
-		}
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer "+t.adapter.Token)
-
-		resp, err := t.client.Do(req)
-		if err != nil {
-			return "", fmt.Errorf("API request failed: %v", err)
-		}
-		defer func() {
-			_ = resp.Body.Close()
-		}()
-
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return "", fmt.Errorf("readAll failed: %v", err)
-		}
-
-		if resp.StatusCode != http.StatusOK {
-			return "", fmt.Errorf("API request failed with status: %d", resp.StatusCode)
-		}
-
-		var responseBody Response
-		if err := json.Unmarshal(body, &responseBody); err != nil {
-			return "", fmt.Errorf("json unmarshal failed: %v", err)
-		}
-
-		if len(responseBody.Choices) > 0 {
-			result = responseBody.Choices[0].Message.Content
-		}
-		duration = fmt.Sprintf("%.2fs", time.Since(startTime).Seconds())
+	req, err := http.NewRequest("POST", t.adapter.URL, bytes.NewBuffer(reqBodyBytes))
+	if err != nil {
+		return "", fmt.Errorf("NewRequest failed: %v", err)
 	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+t.adapter.Token)
+
+	resp, err := t.client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("API request failed: %v", err)
+	}
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("readAll failed: %v", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("API request failed with status: %d", resp.StatusCode)
+	}
+
+	var responseBody Response
+	if err := json.Unmarshal(body, &responseBody); err != nil {
+		return "", fmt.Errorf("json unmarshal failed: %v", err)
+	}
+
+	if len(responseBody.Choices) > 0 {
+		result = responseBody.Choices[0].Message.Content
+	}
+	duration = fmt.Sprintf("%.2fs", time.Since(startTime).Seconds())
 
 	renderedContent, err := ProcessWordResponseWithAdapterInfo(result, t.adapter.Name, t.adapter.Model, duration)
 	if err != nil {

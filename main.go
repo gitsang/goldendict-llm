@@ -10,16 +10,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type CacheConfig struct {
-	Enabled  bool   `default:"false"`
-	Location string `default:"/tmp/goldendict-llm"`
-}
-
 type Config struct {
 	Adapter  string
 	Adapters map[string]AdapterConfig
 	Timeout  string `default:"30s"`
-	Cache    CacheConfig
 }
 
 var rootCmd = &cobra.Command{
@@ -86,15 +80,8 @@ func run() {
 		Timeout: timeout,
 	}
 
-	// cache
-	var cache *Cache
-	if c.Cache.Enabled {
-		cache = NewCache(c.Cache.Location)
-	}
-
 	// translator
 	translator := NewTranslator(adapterConfig,
-		WithCache(cache),
 		WithHTTPClient(httpClient),
 	)
 
